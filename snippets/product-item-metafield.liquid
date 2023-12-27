@@ -1,0 +1,244 @@
+{%- comment -%}Color labels used to detect what is a color swatch{%- endcomment -%}
+{%- assign color_label = 'color,colour,couleur,cor,colore,farbe,색,色,カラー,färg,farve,szín,barva' | split: ',' -%}
+
+<div class="product-item {% if horizontal %}product-item--horizontal{% elsif list %}product-item--list{% else %}product-item--vertical{% endif %} {% if complementary_products %}product-item--complementary{% endif %} {% if section.id == 'blog-sidebar' %}product-item--compact{% endif %} {{ grid_classes }}">
+  {%- form 'product', product, id: form_id, class: product_form_classes -%}
+    {%- capture product_labels -%}
+    {%- unless hide_labels -%}
+      {%- for tag in product.tags -%}
+        {%- if tag contains '__label:' -%}
+          <span class="product-label product-label--custom1">{{ tag | split: '__label:' | last }}</span>
+        {%- endif -%}
+
+        {%- if tag contains '__label1:' -%}
+          <span class="product-label product-label--custom1">{{ tag | split: '__label1:' | last }}</span>
+        {%- endif -%}
+
+        {%- if tag contains '__label2:' -%}
+          <span class="product-label product-label--custom2">{{ tag | split: '__label2:' | last }}</span>
+        {%- endif -%}
+      {%- endfor -%}
+
+      {%- if settings.show_discount and product.price < product.compare_at_price -%}
+        {%- if settings.discount_mode == 'percentage' -%}
+          {%- assign savings = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round | append: '%' -%}
+        {%- else -%}
+          {%- capture savings -%}<span>{{ product.compare_at_price | minus: product.price | money }}</span>{%- endcapture -%}
+        {%- endif -%}
+
+        <span class="product-label product-label--on-sale">{{ 'collection.product.discount_html' | t: savings: savings }}</span>
+      {%- endif -%}
+    {%- endunless -%}
+  {%- endcapture -%}
+
+    {%- if product_labels != blank -%}
+      <div class="product-item__label-list">
+        {{- product_labels -}}
+      </div>
+    {%- endif -%}
+
+    {%- if settings.show_secondary_image and product.media.size > 1 -%}
+      {%- assign show_secondary_media = true -%}
+    {%- else -%}
+      {%- assign show_secondary_media = false -%}
+    {%- endif -%}
+
+    {%- assign filtered_variant = '' -%}
+
+    <a
+      href="{{ product.url }}"
+      class="product-item__image-wrapper {% if show_secondary_media %}product-item__image-wrapper--with-secondary{% endif %}"
+    >
+      {%- if product.media.size > 0 -%}
+        {%- assign primary_media = product.featured_media -%}
+        {{ product.selected_or_first_available_variant.sku }}
+      {%- endif -%}
+    </a>
+
+    <div class="product-item__info-inner">
+      {{ product.title | strip_html | truncate: 50 }}
+    </div>
+    {%- capture price_list -%}
+
+{% if customer %}
+      
+        <div class="product-item__price-list price-list">
+          {%- if product.price < product.compare_at_price -%}
+            {%- if product.price_varies -%}
+              {%- if settings.currency_code_enabled -%}
+                {%- capture price_min -%}{{ product.price_min | money_with_currency }}{%- endcapture -%}
+                {%- capture price_max -%}{{ product.price_max | money_with_currency }}{%- endcapture -%}
+              {%- else -%}
+                {%- capture price_min -%}{{ product.price_min | money }}{%- endcapture -%}
+                {%- capture price_max -%}{{ product.price_max | money }}{%- endcapture -%}
+              {%- endif -%}
+
+              <span class="price price--highlight">
+                <span class="visually-hidden">{{ 'product.general.sale_price' | t }}</span>
+                {{- 'collection.product.from_price_html' | t: price_min: price_min, price_max: price_max -}}
+              </span>
+
+              <span class="price price--compare">
+                <span class="visually-hidden">{{ 'product.general.regular_price' | t }}</span>
+
+                {%- if settings.currency_code_enabled -%}
+                  {{- product.compare_at_price_min | money_with_currency -}}
+                {%- else -%}
+                  {{- product.compare_at_price_min | money -}}
+                {%- endif -%}
+              </span>
+            {%- else -%}
+              <span class="price price--highlight">
+                <span class="visually-hidden">{{ 'product.general.sale_price' | t }}</span>
+
+                {%- if settings.currency_code_enabled -%}
+                  {{- product.price | money_with_currency -}}
+                {%- else -%}
+                  {{- product.price | money -}}
+                {%- endif -%}
+              </span>
+
+              <span class="price price--compare">
+                <span class="visually-hidden">{{ 'product.general.regular_price' | t }}</span>
+                {%- if settings.currency_code_enabled -%}
+                  {{- product.compare_at_price | money_with_currency -}}
+                {%- else -%}
+                  {{- product.compare_at_price | money -}}
+                {%- endif -%}
+              </span>
+            {%- endif -%}
+          {%- elsif product.price_varies -%}
+            {%- if settings.currency_code_enabled -%}
+              {%- capture price_min -%}{{ product.price_min | money_with_currency }}{%- endcapture -%}
+              {%- capture price_max -%}{{ product.price_max | money_with_currency }}{%- endcapture -%}
+            {%- else -%}
+              {%- capture price_min -%}{{ product.price_min | money }}{%- endcapture -%}
+              {%- capture price_max -%}{{ product.price_max | money }}{%- endcapture -%}
+            {%- endif -%}
+
+            <span class="price">
+              <span class="visually-hidden">{{ 'product.general.sale_price' | t }}</span>
+              {{- 'collection.product.from_price_html' | t: price_min: price_min, price_max: price_max -}}
+            </span>
+          {%- else -%}
+            <span class="price">
+              <span class="visually-hidden">{{ 'product.general.sale_price' | t }}</span>
+              {%- if settings.currency_code_enabled -%}
+                {{- product.price | money_with_currency -}}
+              {%- else -%}
+                {{- product.price | money -}}
+              {%- endif -%}
+            </span>
+          {%- endif -%}
+        </div>
+
+
+ {% else %} 
+  {% if request.locale.iso_code == 'de' %}
+         <a href="/account/login" class="loginvieww"> Preise nach Login sichtbar</a> 
+        {% else %}
+        <a href="/account/login" class="loginvieww"> Login to view price</a> 
+    {% endif %} 
+ {% endif %} 
+        
+
+        {%- if product.selected_or_first_available_variant.unit_price_measurement -%}
+          {% if customer %}
+          <div class="product-item__price-info">
+            <div class="unit-price-measurement">
+              <span class="unit-price-measurement__price">{{ product.selected_or_first_available_variant.unit_price | money }}</span>
+              <span class="unit-price-measurement__separator">/ </span>
+
+              {%- if product.selected_or_first_available_variant.unit_price_measurement.reference_value != 1 -%}
+                <span class="unit-price-measurement__reference-value">{{ product.selected_or_first_available_variant.unit_price_measurement.reference_value }}</span>
+              {%- endif -%}
+
+              <span class="unit-price-measurement__reference-unit">{{ product.selected_or_first_available_variant.unit_price_measurement.reference_unit }}</span>
+            </div>
+          </div>
+            {%- endif -%}
+        {%- endif -%}
+      {%- endcapture -%}
+
+    <div class="wrap-in-stock">
+      {% assign stockCode = product.metafields.custom.stock_code %}
+      {% if stockCode == 'SI' %}
+        <div class="stock-code-si cls-stock-code"></div>
+      {% elsif stockCode == 'NI' %}
+        <div class="stock-code-ni cls-stock-code"></div>
+      {% elsif stockCode == 'RI' %}
+        <div class="stock-code-ri cls-stock-code"></div>
+      {% else %}
+        <div class="stock-code-rest cls-stock-code"></div>
+      {% endif %}
+      {%- if request.page_type == 'collection' or request.page_type == 'search' or show_add_to_cart -%}
+        {%- if section.settings.show_quick_view == 'list_grid'
+          or section.settings.show_quick_buy == 'list_grid'
+          or show_add_to_cart
+        -%}
+          {%- assign product_form_classes = 'product-item__action-list button-stack' -%}
+        {%- else -%}
+          {%- assign product_form_classes = 'product-item__action-list product-item__action-list--list-view-only button-stack' -%}
+        {%- endif -%}
+
+        {%- assign form_id = 'product_form_id_' | append: product.id | append: '_' | append: section.id -%}
+
+        {%- capture quick_buy_form -%}
+
+        {%- endcapture -%}
+      {%- endif -%}
+    </div>
+    <div class="wrap-in-delivery-time">
+      {% assign leadTime = product.metafields.custom.lead_time %}
+      {{ leadTime }}
+    </div>    
+    
+    {%- assign product_in_collects = '[' -%}
+{%- for collection in product.collections -%} 
+{%- assign product_in_collects = product_in_collects | append: '{"collection_id":"' | append: collection.id | append: '","product_id":"' | append: product.id | append: '"' | append: ',"product_handle":"' | append: product.handle | append: '"}' -%}
+{% if forloop.last == false %}
+{%- assign product_in_collects =  product_in_collects | append: ',' -%}
+{% endif %}
+{%- endfor -%}
+{%- assign product_in_collects =  product_in_collects | append: ']' -%}
+<span class="col_clct" clct='{{product_in_collects}}'></span>
+
+    <div class="wrap-price-list">{{ price_list }}</div>
+    <input type="text" name="quantity" class="box-qty" value="1">
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}">
+
+    {%- if section.settings.show_quick_buy == 'list_grid' or show_add_to_cart -%}
+      {%- if complementary_products -%}
+        {%- assign quick_buy_classes = 'product-item__action-button button button--small button--ternary' -%}
+      {%- else -%}
+        {%- assign quick_buy_classes = 'product-item__action-button button button--small button--primary' -%}
+      {%- endif -%}
+    {%- else -%}
+      {%- assign quick_buy_classes = 'product-item__action-button product-item__action-button--list-view-only button button--small button--primary' -%}
+    {%- endif -%}
+
+    {%- if product.available -%}
+      {%- if product.variants.size == 1 -%}
+        <button type="submit" class="{{ quick_buy_classes }}" data-action="add-to-cart">
+          {%- if product.template_suffix == 'pre-order' -%}
+            {{- 'collection.product.pre_order' | t -}}
+          {%- else -%}
+            {{- 'collection.product.add_to_cart' | t -}}
+          {%- endif -%}
+        </button>
+      {%- else -%}
+        <a href="{{ product.url }}" class="{{ quick_buy_classes }}">{{ 'collection.product.choose_options' | t }}</a>
+      {%- endif -%}
+    {%- else -%}
+      <button class="{{ quick_buy_classes | replace: 'button--primary', 'button--disabled' }}" disabled>
+        {{ 'collection.product.sold_out' | t }}
+      </button>
+    {%- endif -%}
+
+    {%- if section.settings.show_quick_view == 'list_grid' -%}
+      {%- assign quick_view_classes = 'product-item__action-button button button--small button--ternary hidden-phone' -%}
+    {%- else -%}
+      {%- assign quick_view_classes = 'product-item__action-button product-item__action-button--list-view-only button button--small button--ternary hidden-phone' -%}
+    {%- endif -%}
+  {%- endform -%}
+</div>
